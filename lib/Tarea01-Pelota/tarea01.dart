@@ -17,6 +17,7 @@ class _HomeState extends State<Home> {
   Color colorPorDefecto = Colors.red;
   Color colorClickeado = Colors.black;
   List<Widget> pelotas = [];
+  int ballClickedCounter = 0;
 
   double getRandomDouble() {
     return gran.nextDouble() * 2 - 1; //De -1 a 1
@@ -25,11 +26,36 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(children: pelotas),
+      body: Stack(
+        children: [
+          Positioned(
+            top: 20,
+            left: 20,
+            child: Text(
+              'Score: $ballClickedCounter',
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ...pelotas, // Agrega las pelotas a la pantalla
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            pelotas.add(Pelota(key: UniqueKey()));
+            pelotas.add(
+              Pelota(
+                key: UniqueKey(),
+                onPelotaClicked: () {
+                  setState(() {
+                    ballClickedCounter++;
+                  });
+                },
+              ),
+            );
           });
         },
         child: Icon(Icons.add),
@@ -39,7 +65,9 @@ class _HomeState extends State<Home> {
 }
 
 class Pelota extends StatefulWidget {
-  const Pelota({super.key});
+  final Function onPelotaClicked; // Callback para el clic en la pelota
+
+  const Pelota({super.key, required this.onPelotaClicked});
 
   @override
   State<Pelota> createState() => _PelotaState();
@@ -81,25 +109,11 @@ class _PelotaState extends State<Pelota> {
         onTap: () {
           // Cuando se le de click a la pelota
           print('Pelota clickeada');
+          widget.onPelotaClicked(); // Llama a la función de callback
           setState(() {
             isClicked = true;
             colorPorDefecto = Colors.black;
           });
-
-          // final parentState = context.findAncestorStateOfType<_HomeState>();
-          // if (parentState != null) {
-          //   parentState.setState(() {
-          //     parentState.pelotas.removeWhere(
-          //       (pelota) => pelota.key == widget.key,
-          //     );
-          //   });
-          // }
-
-          // setState(() {
-          //   // posY = 1; // Cambiar la posición Y para que desaparezca
-          //   (context.findAncestorStateOfType<_HomeState>()?.pelotas ?? [])
-          //       .remove(widget);
-          // });
         },
         child: Container(
           width: 70,

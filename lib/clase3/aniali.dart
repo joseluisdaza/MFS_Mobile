@@ -14,6 +14,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   double x = 0, y = 1;
+  int ballClickedCounter = 0;
   var gran = Random();
   Color colorPorDefecto = Colors.black;
 
@@ -22,6 +23,18 @@ class _HomeState extends State<Home> {
     return Scaffold(
       body: Stack(
         children: [
+          Positioned(
+            top: 20,
+            left: 20,
+            child: Text(
+              'Score: $ballClickedCounter',
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           AnimatedAlign(
             alignment: Alignment(x, y), //Alignment en el centro
             duration: Duration(milliseconds: 1000),
@@ -51,16 +64,23 @@ class _HomeState extends State<Home> {
               y = 1;
             },
 
-            child: Container(
-              width: 70,
-              height: 70,
-              // color: Colors.black //NO puede haber colorsi esquehay decoration.
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [Colors.white, colorPorDefecto],
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  ballClickedCounter++; //Incrementa la cantidad de pelotas golpeadas.
+                });
+              },
+              child: Container(
+                width: 70,
+                height: 70,
+                // color: Colors.black //NO puede haber colorsi esquehay decoration.
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [Colors.white, colorPorDefecto],
+                  ),
+                  //Para que se vea redondo
+                  borderRadius: BorderRadius.circular(100),
                 ),
-                //Para que se vea redondo
-                borderRadius: BorderRadius.circular(100),
               ),
             ),
           ),

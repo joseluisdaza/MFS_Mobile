@@ -14,13 +14,34 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   var gran = Random();
+  int level = 1;
+  int maxLevel = 4;
+  int maxPelotas = 10;
+
   Color colorPorDefecto = Colors.red;
   Color colorClickeado = Colors.black;
   List<Widget> pelotas = [];
   int ballClickedCounter = 0;
+  int score = 0;
 
   double getRandomDouble() {
     return gran.nextDouble() * 2 - 1; //De -1 a 1
+  }
+
+  int getSpeed() {
+    return 2550 - (level * 500); // Velocidad de movimiento de las pelotas
+  }
+
+  void resetPelotas() {
+    pelotas.clear(); // Limpiar la lista de pelotas
+    ballClickedCounter = 0; // Reiniciar el contador de clics
+  }
+
+  void onPelotaClicked() {
+    setState(() {
+      ballClickedCounter++;
+      score += 1 * level; // Aumentar el puntaje según el nivel
+    });
   }
 
   @override
@@ -32,7 +53,7 @@ class _HomeState extends State<Home> {
             top: 20,
             left: 20,
             child: Text(
-              'Score: $ballClickedCounter',
+              'Level: $level Score: $score',
               style: TextStyle(
                 fontSize: 20,
                 color: Colors.black,
@@ -46,19 +67,27 @@ class _HomeState extends State<Home> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            pelotas.add(
-              Pelota(
-                key: UniqueKey(),
-                onPelotaClicked: () {
-                  setState(() {
-                    ballClickedCounter++;
-                  });
-                },
-              ),
-            );
+            if (ballClickedCounter >= maxPelotas) {
+              // Si se alcanzó el máximo de pelotas, reiniciar
+              resetPelotas();
+              level++;
+            }
+
+            if (level <= maxLevel) {
+              int newSpeed = getSpeed();
+              for (int i = 0; i < maxPelotas; i++) {
+                pelotas.add(
+                  Pelota(
+                    key: UniqueKey(),
+                    speed: newSpeed,
+                    onPelotaClicked: onPelotaClicked,
+                  ),
+                );
+              }
+            }
           });
         },
-        child: Icon(Icons.add),
+        child: Icon(Icons.play_arrow),
       ),
     );
   }
@@ -66,8 +95,9 @@ class _HomeState extends State<Home> {
 
 class Pelota extends StatefulWidget {
   final Function onPelotaClicked; // Callback para el clic en la pelota
+  final int speed;
 
-  const Pelota({super.key, required this.onPelotaClicked});
+  const Pelota({super.key, required this.speed, required this.onPelotaClicked});
 
   @override
   State<Pelota> createState() => _PelotaState();
@@ -86,7 +116,7 @@ class _PelotaState extends State<Pelota> {
   }
 
   void _moveRandomly() {
-    Future.delayed(Duration(milliseconds: 1000), () {
+    Future.delayed(Duration(milliseconds: widget.speed), () {
       setState(() {
         if (isClicked) {
           posY = 1; // Cambia la posición Y para que desaparezca
@@ -103,12 +133,10 @@ class _PelotaState extends State<Pelota> {
   Widget build(BuildContext context) {
     return AnimatedAlign(
       alignment: Alignment(posX, posY), // Alignment en el centro
-      duration: Duration(milliseconds: 1000),
+      duration: Duration(milliseconds: widget.speed),
       // curve: Curves.bounceOut, // Para que rebote
       child: GestureDetector(
         onTap: () {
-          // Cuando se le de click a la pelota
-          print('Pelota clickeada');
           widget.onPelotaClicked(); // Llama a la función de callback
           setState(() {
             isClicked = true;

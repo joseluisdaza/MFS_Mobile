@@ -14,7 +14,10 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int modo = -1;
   List<ModeloNodo> vNodo = [];
+  List<ModeloLinea> vLineas = [];
+  ModeloNodo? nodoInicio;
   var gran = Random();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,10 +27,7 @@ class _HomeState extends State<Home> {
             onPanDown: (desp) {
               setState(() {
                 //Crear el nodo porque hay un toque.
-
                 if (modo == 1) {
-                  //TODO: Display a popup to ask for the color, radio and name of the node.
-
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
@@ -70,16 +70,19 @@ class _HomeState extends State<Home> {
                           TextButton(
                             onPressed: () {
                               // setState(() {
-                              vNodo.add(
-                                ModeloNodo(
-                                  desp.localPosition.dx,
-                                  desp.localPosition.dy,
-                                  double.parse(radioController.text),
-                                  getColor(colorController.text),
-                                  nameController.text,
-                                ),
-                              );
-                              Navigator.of(context).pop();
+                              setState(() {
+                                vNodo.add(
+                                  ModeloNodo(
+                                    desp.localPosition.dx,
+                                    desp.localPosition.dy,
+                                    double.parse(radioController.text),
+                                    getColor(colorController.text),
+                                    nameController.text,
+                                  ),
+                                );
+                                Navigator.of(context).pop();
+                              });
+
                               // });
                             },
                             child: Text("Crear"),
@@ -108,9 +111,69 @@ class _HomeState extends State<Home> {
                     print("Estamos sobre el nodo: $indice");
                     vNodo.removeAt(indice);
                   }
+                } else if (modo == 4) {
+                  int indice = estaEnNodo(
+                    desp.localPosition.dx,
+                    desp.localPosition.dy,
+                  );
+
+                  if (indice >= 0) {
+                    if (nodoInicio == null) {
+                      nodoInicio = vNodo[indice];
+                    } else {
+                      ModeloNodo nodoFin = vNodo[indice];
+
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          TextEditingController valorController =
+                              TextEditingController();
+                          return AlertDialog(
+                            title: Text("Valor/Peso"),
+                            content: TextField(
+                              controller: valorController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: "Valor/Peso de la arista",
+                              ),
+                            ),
+
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text("Cancelar"),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  double valor =
+                                      double.tryParse(valorController.text) ??
+                                      0.0;
+                                  vLineas.add(
+                                    ModeloLinea(
+                                      nodoInicio!,
+                                      nodoFin,
+                                      Colors.grey.shade500,
+                                      valor,
+                                    ),
+                                  );
+
+                                  nodoInicio = null;
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text("Crear"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }
+                  }
                 }
               });
             },
+
             onPanUpdate: (desp) {
               if (modo == 2) {
                 setState(() {
@@ -129,7 +192,10 @@ class _HomeState extends State<Home> {
                 });
               }
             },
-            child: CustomPaint(painter: Nodo(vNodo), child: Container()),
+            child: CustomPaint(
+              painter: Nodo(vNodo, vLineas),
+              child: Container(),
+            ),
           ),
         ],
       ),
@@ -175,6 +241,20 @@ class _HomeState extends State<Home> {
                   });
                 },
                 icon: Icon(Icons.delete, color: Colors.white),
+              ),
+            ),
+
+            SizedBox(width: 5),
+            CircleAvatar(
+              backgroundColor:
+                  (modo == 4) ? Colors.green.shade900 : Colors.red.shade900,
+              child: IconButton(
+                onPressed: () {
+                  setState(() {
+                    modo = 4;
+                  });
+                },
+                icon: Icon(Icons.linear_scale, color: Colors.white),
               ),
             ),
           ],

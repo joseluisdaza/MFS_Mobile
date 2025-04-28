@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -25,7 +26,28 @@ class Nodo extends CustomPainter {
     vNodo.forEach((ele) {
       // Draw the circle
       paint.color = ele.color;
-      canvas.drawCircle(Offset(ele.x, ele.y), ele.radio, paint);
+      // canvas.drawCircle(Offset(ele.x, ele.y), ele.radio, paint);
+
+      // Create a pentagon path
+      Path pentagonPath = Path();
+      double radius = ele.radio;
+      double centerX = ele.x;
+      double centerY = ele.y;
+
+      for (int i = 0; i < 5; i++) {
+        double angle =
+            (2 * pi * i) / 5 - pi / 2; // Divide the circle into 5 parts
+        double x = centerX + radius * cos(angle);
+        double y = centerY + radius * sin(angle);
+        if (i == 0) {
+          pentagonPath.moveTo(x, y); // Move to the first point
+        } else {
+          pentagonPath.lineTo(x, y); // Draw lines to the other points
+        }
+      }
+      pentagonPath.close(); // Close the path to form the pentagon
+
+      canvas.drawPath(pentagonPath, paint);
 
       // Draw the text (ele.nombre)
       final textStyle = TextStyle(

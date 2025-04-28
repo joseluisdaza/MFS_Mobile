@@ -27,6 +27,10 @@ class _HomeState extends State<Home> {
             onPanDown: (desp) {
               setState(() {
                 //Crear el nodo porque hay un toque.
+                if (modo != 4) {
+                  nodoInicio = null;
+                }
+
                 if (modo == 1) {
                   showDialog(
                     context: context,
@@ -175,6 +179,10 @@ class _HomeState extends State<Home> {
             },
 
             onPanUpdate: (desp) {
+              if (modo != 4) {
+                nodoInicio = null;
+              }
+
               if (modo == 2) {
                 setState(() {
                   //Mover el nodo
@@ -257,6 +265,17 @@ class _HomeState extends State<Home> {
                 icon: Icon(Icons.linear_scale, color: Colors.white),
               ),
             ),
+
+            SizedBox(width: 5),
+            CircleAvatar(
+              backgroundColor: Colors.blue,
+              child: IconButton(
+                onPressed: () {
+                  findShortestPath(context);
+                },
+                icon: Icon(Icons.route, color: Colors.white),
+              ),
+            ),
           ],
         ),
       ),
@@ -314,5 +333,207 @@ class _HomeState extends State<Home> {
     }
 
     return Colors.black; // Default color for unrecognized names
+  }
+
+  //Solution for the problem of traveler
+  Map<ModeloNodo, List<MapEntry<ModeloNodo, double>>> buildGraph() {
+    Map<ModeloNodo, List<MapEntry<ModeloNodo, double>>> graph = {};
+
+    for (var nodo in vNodo) {
+      graph[nodo] = [];
+    }
+
+    for (var linea in vLineas) {
+      graph[linea.inicio]?.add(MapEntry(linea.fin, linea.valor));
+      graph[linea.fin]?.add(
+        MapEntry(linea.inicio, linea.valor),
+      ); // Undirected graph
+    }
+
+    return graph;
+  }
+
+  List<ModeloNodo> dijkstra(
+    ModeloNodo start,
+    ModeloNodo end,
+    Map<ModeloNodo, List<MapEntry<ModeloNodo, double>>> graph,
+  ) {
+    Map<ModeloNodo, double> distances = {};
+    Map<ModeloNodo, ModeloNodo?> previous = {};
+    Set<ModeloNodo> visited = {};
+    // PriorityQueue<MapEntry<ModeloNodo, double>> queue = PriorityQueue(
+    //   (a, b) => a.value.compareTo(b.value),
+    // );
+
+    List<MapEntry<ModeloNodo, double>> queue = [];
+
+    // Add an element to the queue
+    queue.add(MapEntry(start, 0));
+
+    // Sort the queue based on the value
+    queue.sort((a, b) => a.value.compareTo(b.value));
+
+    // Initialize distances
+    for (var nodo in graph.keys) {
+      distances[nodo] = double.infinity;
+      previous[nodo] = null;
+    }
+    distances[start] = 0;
+
+    queue.add(MapEntry(start, 0));
+
+    while (queue.isNotEmpty) {
+      // Remove the first element (lowest value)
+      // var current = queue.removeFirst().key;
+      var current = queue.removeAt(0).key;
+
+      if (current == end) break; // Stop if we reach the destination
+
+      if (visited.contains(current)) continue;
+      visited.add(current);
+
+      for (var neighbor in graph[current]!) {
+        var neighborNode = neighbor.key;
+        var weight = neighbor.value;
+
+        if (visited.contains(neighborNode)) continue;
+
+        double newDistance = distances[current]! + weight;
+        if (newDistance < distances[neighborNode]!) {
+          distances[neighborNode] = newDistance;
+          previous[neighborNode] = current;
+          queue.add(MapEntry(neighborNode, newDistance));
+        }
+      }
+    }
+
+    // Reconstruct the shortest path
+    List<ModeloNodo> path = [];
+    ModeloNodo? currentNode = end;
+    while (currentNode != null) {
+      path.insert(0, currentNode);
+      currentNode = previous[currentNode];
+    }
+
+    return path;
+  }
+
+  void findShortestPath(BuildContext context) {
+    ModeloNodo? startNode;
+    ModeloNodo? endNode;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Encuentra la ruta mas corta"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButton<ModeloNodo>(
+                value: startNode,
+                hint: Text("Nodo inicio"),
+                items:
+                    vNodo.map((nodo) {
+                      return DropdownMenuItem(
+                        value: nodo,
+                        child: Text(nodo.nombre),
+                      );
+                    }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    startNode = value;
+                  });
+                },
+              ),
+              DropdownButton<ModeloNodo>(
+                value: endNode,
+                hint: Text("Nodo Final"),
+                items:
+                    vNodo.map((nodo) {
+                      return DropdownMenuItem(
+                        value: nodo,
+                        child: Text(nodo.nombre),
+                      );
+                    }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    endNode = value;
+                  });
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (startNode != null && endNode != null) {
+                  var graph = buildGraph();
+                  var path = dijkstra(startNode!, endNode!, graph);
+
+                  var distancia = 0.0;
+                  for (var i = 0; i < path.length - 1; i++) {
+                    var nodoActual = path[i];
+                    var siguienteNodo = path[i + 1];
+
+                    // Find the weight of the edge between nodoActual and siguienteNodo
+                    var arista = vLineas.firstWhere(
+                      (linea) =>
+                          (linea.inicio == nodoActual &&
+                              linea.fin == siguienteNodo) ||
+                          (linea.inicio == siguienteNodo &&
+                              linea.fin == nodoActual),
+                      orElse:
+                          () => ModeloLinea(
+                            nodoActual,
+                            siguienteNodo,
+                            Colors.black,
+                            0.0,
+                          ),
+                    );
+                    distancia += arista.valor;
+                  }
+
+                  String mensaje =
+                      '${path.map((nodo) => nodo.nombre).join(" -> ")} \n distancia: $distancia';
+
+                  Navigator.of(context).pop();
+
+                  // Display the result
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text("Camino mas corto"),
+                        content: Text(
+                          // path.map((nodo) => nodo.nombre).join(" -> "),
+                          mensaje,
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text("OK"),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
+                // Navigator.of(context).pop();
+              },
+              child: Text("Find"),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

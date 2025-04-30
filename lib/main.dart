@@ -14,7 +14,11 @@ import 'package:flutter/material.dart';
 // import 'package:layouts/Clase6/grid1.dart';
 // import 'package:layouts/Clase6/grid2.dart';
 // import 'package:layouts/Clase6/grid3.dart';
-import 'package:layouts/Tarea02-grafos/tarea02.dart';
+// import 'package:layouts/Tarea02-grafos/tarea02.dart';
+// import 'package:layouts/clase7/home.dart';
+// import 'package:layouts/clase7/sin_tiempo.dart';
+// import 'package:layouts/clase7/formularios.dart';
+import 'package:layouts/clase7_Patrones/home.dart';
 
 void main() {
   runApp(const MainApp());
@@ -25,7 +29,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: Home());
+    // return const MaterialApp(home: Home());
 
     // return const MaterialApp(home: Fotos());
     // return const MaterialApp(home: Livi());
@@ -34,5 +38,7 @@ class MainApp extends StatelessWidget {
     // return const MaterialApp(home: Grid1());
     // return const MaterialApp(home: Grid2());
     // return const MaterialApp(home: Grid3());
+
+    return MaterialApp(home: Home());
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:layouts/Clase8_SumaDosNumeros/presentacion/presentacion.dart';
+import 'package:layouts/clase8_Paint/presentacion/presentacion.dart';
+// import 'package:layouts/Clase8_SumaDosNumeros/presentacion/presentacion.dart';
+// import 'package:layouts/Clase8_SumaDosNumeros/presentacion/presentacion.dart';
 
 //Ejemplo Riverpod
 void main() {
@@ -12,6 +14,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: Presentacion());
+    // return MaterialApp(home: Presentacion());
+    return MaterialApp(home: InterfazUsuario());
   }
 }
